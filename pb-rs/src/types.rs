@@ -1517,11 +1517,7 @@ impl Enumerator {
         if self.fields.is_empty() {
             Ok(())
         } else {
-            self.write_impl_default(w)?;
-            writeln!(w)?;
-            self.write_from_i32(w)?;
-            writeln!(w)?;
-            self.write_from_str(w)
+            self.write_impls(w)
         }
     }
 
@@ -1533,6 +1529,14 @@ impl Enumerator {
         }
         writeln!(w, "}}")?;
         Ok(())
+    }
+
+    fn write_impls<W: Write>(&self, w: &mut W) -> Result<()> {
+        self.write_impl_default(w)?;
+        writeln!(w)?;
+        self.write_from_i32(w)?;
+        writeln!(w)?;
+        self.write_from_str(w)
     }
 
     fn write_impl_default<W: Write>(&self, w: &mut W) -> Result<()> {
@@ -2364,11 +2368,7 @@ impl FileDescriptor {
             writeln!(w)?;
             m.write_definition(w)?;
             writeln!(w)?;
-            m.write_impl_default(w)?;
-            writeln!(w)?;
-            m.write_from_i32(w)?;
-            writeln!(w)?;
-            m.write_from_str(w)?;
+            m.write_impls(w)?;
         }
         Ok(())
     }

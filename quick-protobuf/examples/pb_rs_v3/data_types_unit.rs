@@ -13,8 +13,9 @@ use quick_protobuf::{BytesReader, Result, MessageInfo, MessageRead, MessageWrite
 use super::*;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
-pub enum test {
-    a = 10,
+pub struct test(pub i32);
+impl test {
+    pub const a: test = test(10);
 }
 
 impl Default for test {

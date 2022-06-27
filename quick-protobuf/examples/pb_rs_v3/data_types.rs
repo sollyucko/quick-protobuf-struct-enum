@@ -17,9 +17,10 @@ use quick_protobuf::sizeofs::*;
 use super::*;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
-pub enum FooEnum {
-    FIRST_VALUE = 1,
-    SECOND_VALUE = 2,
+pub struct FooEnum(pub i32);
+impl FooEnum {
+    pub const FIRST_VALUE: FooEnum = FooEnum(1);
+    pub const SECOND_VALUE: FooEnum = FooEnum(2);
 }
 
 impl Default for FooEnum {
@@ -173,7 +174,7 @@ impl<'a> MessageWrite for FooMessage<'a> {
         + if self.f_sint32 == 0i32 { 0 } else { 1 + sizeof_sint32(*(&self.f_sint32)) }
         + if self.f_sint64 == 4i64 { 0 } else { 1 + sizeof_sint64(*(&self.f_sint64)) }
         + if self.f_bool == true { 0 } else { 1 + sizeof_varint(*(&self.f_bool) as u64) }
-        + if self.f_FooEnum == data_types::FooEnum::FIRST_VALUE { 0 } else { 1 + sizeof_varint(*(&self.f_FooEnum) as u64) }
+        + if self.f_FooEnum == data_types::FooEnum::FIRST_VALUE { 0 } else { 1 + sizeof_varint((&self.f_FooEnum).0 as u32 as u64) }
         + if self.f_fixed64 == 0u64 { 0 } else { 1 + 8 }
         + if self.f_sfixed64 == 0i64 { 0 } else { 1 + 8 }
         + if self.f_fixed32 == 0u32 { 0 } else { 1 + 4 }
@@ -190,7 +191,7 @@ impl<'a> MessageWrite for FooMessage<'a> {
         + self.f_imported.as_ref().map_or(0, |m| 2 + sizeof_len((m).get_size()))
         + self.f_baz.as_ref().map_or(0, |m| 2 + sizeof_len((m).get_size()))
         + self.f_nested.as_ref().map_or(0, |m| 2 + sizeof_len((m).get_size()))
-        + if self.f_nested_enum == data_types::mod_BazMessage::mod_Nested::NestedEnum::Foo { 0 } else { 2 + sizeof_varint(*(&self.f_nested_enum) as u64) }
+        + if self.f_nested_enum == data_types::mod_BazMessage::mod_Nested::NestedEnum::Foo { 0 } else { 2 + sizeof_varint((&self.f_nested_enum).0 as u32 as u64) }
         + self.f_map.iter().map(|(k, v)| 2 + sizeof_len(2 + sizeof_len((k).len()) + sizeof_varint(*(v) as u64))).sum::<usize>()
         + self.f_repeated_string.iter().map(|s| 2 + sizeof_len((s).len())).sum::<usize>()
         + self.f_repeated_baz_message.iter().map(|s| 2 + sizeof_len((s).get_size())).sum::<usize>()
@@ -209,7 +210,7 @@ impl<'a> MessageWrite for FooMessage<'a> {
         if self.f_sint32 != 0i32 { w.write_with_tag(40, |w| w.write_sint32(*&self.f_sint32))?; }
         if self.f_sint64 != 4i64 { w.write_with_tag(48, |w| w.write_sint64(*&self.f_sint64))?; }
         if self.f_bool != true { w.write_with_tag(56, |w| w.write_bool(*&self.f_bool))?; }
-        if self.f_FooEnum != data_types::FooEnum::FIRST_VALUE { w.write_with_tag(64, |w| w.write_enum(*&self.f_FooEnum as i32))?; }
+        if self.f_FooEnum != data_types::FooEnum::FIRST_VALUE { w.write_with_tag(64, |w| w.write_enum((&self.f_FooEnum).0))?; }
         if self.f_fixed64 != 0u64 { w.write_with_tag(73, |w| w.write_fixed64(*&self.f_fixed64))?; }
         if self.f_sfixed64 != 0i64 { w.write_with_tag(81, |w| w.write_sfixed64(*&self.f_sfixed64))?; }
         if self.f_fixed32 != 0u32 { w.write_with_tag(93, |w| w.write_fixed32(*&self.f_fixed32))?; }
@@ -226,7 +227,7 @@ impl<'a> MessageWrite for FooMessage<'a> {
         if let Some(ref s) = self.f_imported { w.write_with_tag(178, |w| w.write_message(s))?; }
         if let Some(ref s) = self.f_baz { w.write_with_tag(186, |w| w.write_message(s))?; }
         if let Some(ref s) = self.f_nested { w.write_with_tag(194, |w| w.write_message(s))?; }
-        if self.f_nested_enum != data_types::mod_BazMessage::mod_Nested::NestedEnum::Foo { w.write_with_tag(200, |w| w.write_enum(*&self.f_nested_enum as i32))?; }
+        if self.f_nested_enum != data_types::mod_BazMessage::mod_Nested::NestedEnum::Foo { w.write_with_tag(200, |w| w.write_enum((&self.f_nested_enum).0))?; }
         for (k, v) in self.f_map.iter() { w.write_with_tag(210, |w| w.write_map(2 + sizeof_len((k).len()) + sizeof_varint(*(v) as u64), 10, |w| w.write_string(&**k), 16, |w| w.write_int32(*v)))?; }
         for s in &self.f_repeated_string { w.write_with_tag(242, |w| w.write_string(&**s))?; }
         for s in &self.f_repeated_baz_message { w.write_with_tag(250, |w| w.write_message(s))?; }
@@ -368,10 +369,11 @@ impl MessageWrite for NestedMessage {
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
-pub enum NestedEnum {
-    Foo = 0,
-    Bar = 1,
-    Baz = 2,
+pub struct NestedEnum(pub i32);
+impl NestedEnum {
+    pub const Foo: NestedEnum = NestedEnum(0);
+    pub const Bar: NestedEnum = NestedEnum(1);
+    pub const Baz: NestedEnum = NestedEnum(2);
 }
 
 impl Default for NestedEnum {

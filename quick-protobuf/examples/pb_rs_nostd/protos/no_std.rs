@@ -16,9 +16,10 @@ use quick_protobuf::sizeofs::*;
 use super::super::*;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
-pub enum MyEnum {
-    Val0 = 0,
-    Val1 = 1,
+pub struct MyEnum(pub i32);
+impl MyEnum {
+    pub const Val0: MyEnum = MyEnum(0);
+    pub const Val1: MyEnum = MyEnum(1);
 }
 
 impl Default for MyEnum {
@@ -72,12 +73,12 @@ impl MessageWrite for EmbeddedMessage {
     fn get_size(&self) -> usize {
         0
         + if self.val == 0i32 { 0 } else { 1 + sizeof_varint(*(&self.val) as u64) }
-        + if self.e == protos::no_std::MyEnum::Val0 { 0 } else { 1 + sizeof_varint(*(&self.e) as u64) }
+        + if self.e == protos::no_std::MyEnum::Val0 { 0 } else { 1 + sizeof_varint((&self.e).0 as u32 as u64) }
     }
 
     fn write_message<W: WriterBackend>(&self, w: &mut Writer<W>) -> Result<()> {
         if self.val != 0i32 { w.write_with_tag(8, |w| w.write_int32(*&self.val))?; }
-        if self.e != protos::no_std::MyEnum::Val0 { w.write_with_tag(16, |w| w.write_enum(*&self.e as i32))?; }
+        if self.e != protos::no_std::MyEnum::Val0 { w.write_with_tag(16, |w| w.write_enum((&self.e).0))?; }
         Ok(())
     }
 }

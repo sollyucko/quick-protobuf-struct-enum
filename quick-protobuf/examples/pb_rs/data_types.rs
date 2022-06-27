@@ -17,9 +17,10 @@ use quick_protobuf::sizeofs::*;
 use super::*;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
-pub enum FooEnum {
-    FIRST_VALUE = 1,
-    SECOND_VALUE = 2,
+pub struct FooEnum(pub i32);
+impl FooEnum {
+    pub const FIRST_VALUE: FooEnum = FooEnum(1);
+    pub const SECOND_VALUE: FooEnum = FooEnum(2);
 }
 
 impl Default for FooEnum {
@@ -169,7 +170,7 @@ impl<'a> MessageWrite for FooMessage<'a> {
         + self.f_sint32.as_ref().map_or(0, |m| 1 + sizeof_sint32(*(m)))
         + if self.f_sint64 == 4i64 { 0 } else { 1 + sizeof_sint64(*(&self.f_sint64)) }
         + if self.f_bool == true { 0 } else { 1 + sizeof_varint(*(&self.f_bool) as u64) }
-        + self.f_FooEnum.as_ref().map_or(0, |m| 1 + sizeof_varint(*(m) as u64))
+        + self.f_FooEnum.as_ref().map_or(0, |m| 1 + sizeof_varint((m).0 as u32 as u64))
         + self.f_fixed64.as_ref().map_or(0, |_| 1 + 8)
         + self.f_sfixed64.as_ref().map_or(0, |_| 1 + 8)
         + if self.f_fixed32 == 0u32 { 0 } else { 1 + 4 }
@@ -186,7 +187,7 @@ impl<'a> MessageWrite for FooMessage<'a> {
         + self.f_imported.as_ref().map_or(0, |m| 2 + sizeof_len((m).get_size()))
         + self.f_baz.as_ref().map_or(0, |m| 2 + sizeof_len((m).get_size()))
         + self.f_nested.as_ref().map_or(0, |m| 2 + sizeof_len((m).get_size()))
-        + self.f_nested_enum.as_ref().map_or(0, |m| 2 + sizeof_varint(*(m) as u64))
+        + self.f_nested_enum.as_ref().map_or(0, |m| 2 + sizeof_varint((m).0 as u32 as u64))
         + self.f_map.iter().map(|(k, v)| 2 + sizeof_len(2 + sizeof_len((k).len()) + sizeof_varint(*(v) as u64))).sum::<usize>()
         + match self.test_oneof {
             mod_FooMessage::OneOftest_oneof::f1(ref m) => 2 + sizeof_varint(*(m) as u64),
@@ -203,7 +204,7 @@ impl<'a> MessageWrite for FooMessage<'a> {
         if let Some(ref s) = self.f_sint32 { w.write_with_tag(40, |w| w.write_sint32(*s))?; }
         if self.f_sint64 != 4i64 { w.write_with_tag(48, |w| w.write_sint64(*&self.f_sint64))?; }
         if self.f_bool != true { w.write_with_tag(56, |w| w.write_bool(*&self.f_bool))?; }
-        if let Some(ref s) = self.f_FooEnum { w.write_with_tag(64, |w| w.write_enum(*s as i32))?; }
+        if let Some(ref s) = self.f_FooEnum { w.write_with_tag(64, |w| w.write_enum((s).0))?; }
         if let Some(ref s) = self.f_fixed64 { w.write_with_tag(73, |w| w.write_fixed64(*s))?; }
         if let Some(ref s) = self.f_sfixed64 { w.write_with_tag(81, |w| w.write_sfixed64(*s))?; }
         if self.f_fixed32 != 0u32 { w.write_with_tag(93, |w| w.write_fixed32(*&self.f_fixed32))?; }
@@ -220,7 +221,7 @@ impl<'a> MessageWrite for FooMessage<'a> {
         if let Some(ref s) = self.f_imported { w.write_with_tag(178, |w| w.write_message(s))?; }
         if let Some(ref s) = self.f_baz { w.write_with_tag(186, |w| w.write_message(s))?; }
         if let Some(ref s) = self.f_nested { w.write_with_tag(194, |w| w.write_message(s))?; }
-        if let Some(ref s) = self.f_nested_enum { w.write_with_tag(200, |w| w.write_enum(*s as i32))?; }
+        if let Some(ref s) = self.f_nested_enum { w.write_with_tag(200, |w| w.write_enum((s).0))?; }
         for (k, v) in self.f_map.iter() { w.write_with_tag(210, |w| w.write_map(2 + sizeof_len((k).len()) + sizeof_varint(*(v) as u64), 10, |w| w.write_string(&**k), 16, |w| w.write_int32(*v)))?; }
         match self.test_oneof {            mod_FooMessage::OneOftest_oneof::f1(ref m) => { w.write_with_tag(216, |w| w.write_int32(*m))? },
             mod_FooMessage::OneOftest_oneof::f2(ref m) => { w.write_with_tag(224, |w| w.write_bool(*m))? },
@@ -352,10 +353,11 @@ impl MessageWrite for NestedMessage {
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
-pub enum NestedEnum {
-    Foo = 0,
-    Bar = 1,
-    Baz = 2,
+pub struct NestedEnum(pub i32);
+impl NestedEnum {
+    pub const Foo: NestedEnum = NestedEnum(0);
+    pub const Bar: NestedEnum = NestedEnum(1);
+    pub const Baz: NestedEnum = NestedEnum(2);
 }
 
 impl Default for NestedEnum {

@@ -367,12 +367,12 @@ impl FieldType {
 
     fn get_size(&self, s: &str) -> String {
         match *self {
-            FieldType::Int32
-            | FieldType::Int64
+            FieldType::Int32 => format!("sizeof_varint(*({}) as u32 as u64)", s),
+            FieldType::Int64
             | FieldType::Uint32
             | FieldType::Uint64
-            | FieldType::Bool
-            | FieldType::Enum(_) => format!("sizeof_varint(*({}) as u64)", s),
+            | FieldType::Bool => format!("sizeof_varint(*({}) as u64)", s),
+            FieldType::Enum(_) => format!("sizeof_varint(({}).0 as u32 as u64)", s),
             FieldType::Sint32 => format!("sizeof_sint32(*({}))", s),
             FieldType::Sint64 => format!("sizeof_sint64(*({}))", s),
 
@@ -394,7 +394,7 @@ impl FieldType {
 
     fn get_write(&self, s: &str, boxed: bool) -> String {
         match *self {
-            FieldType::Enum(_) => format!("write_enum(*{} as i32)", s),
+            FieldType::Enum(_) => format!("write_enum(({}).0)", s),
 
             FieldType::Int32
             | FieldType::Sint32
@@ -1523,9 +1523,10 @@ impl Enumerator {
 
     fn write_definition<W: Write>(&self, w: &mut W) -> Result<()> {
         writeln!(w, "#[derive(Debug, PartialEq, Eq, Clone, Copy)]")?;
-        writeln!(w, "pub enum {} {{", self.name)?;
+        writeln!(w, "pub struct {}(pub i32);", self.name)?;
+        writeln!(w, "impl {} {{", self.name)?;
         for &(ref f, ref number) in &self.fields {
-            writeln!(w, "    {} = {},", f, number)?;
+            writeln!(w, "    pub const {0}: {1} = {1}({2});", f, self.name, number)?;
         }
         writeln!(w, "}}")?;
         Ok(())

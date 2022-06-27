@@ -6,7 +6,7 @@ pub enum Error {
     /// IO error
     Io(io::Error),
     /// Nom Error
-    Nom(nom::Err<nom::error::Error<String>>),
+    Nom(::nom::simple_errors::Err),
     /// No .proto file provided
     NoProto,
     /// Cannot read input file
